@@ -4,19 +4,13 @@
 
 A heterogeneous knowledge distillation (KD) framework for computational deorphanization of human olfactory receptors (ORs). ScentOR bridges gradient boosting (GB)-based teacher models with neural network (NN)-based student models using bidirectional gated cross-attention, achieving robust odorant ligand–OR protein interaction prediction from 1D sequence-based embeddings without explicit 3D structural input.
 
-> **Paper**: *ScentOR: Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization*
-> Eun Cheol Kim and YounJoon Jung — Department of Chemistry, Seoul National University
-> Submitted to *Journal of Chemical Information and Modeling* (JCIM)
-
----
+> **Paper**: Eun Cheol Kim and YounJoon Jung. ScentOR: Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization. *In preparation for Journal of Chemical Information and Modeling*.
 
 ## Overview
 
 ScentOR demonstrates that combining the implicit evolutionary knowledge of 1D sequence-based foundation models (MoLFormer for ligands, ProtT5 for proteins) with the non-linear physicochemical decision boundaries of a GB teacher yields superior generalization for OR deorphanization — without requiring any explicit 3D structural prior.
 
 The framework systematically evaluates eight scenarios (I–VIII) spanning baseline teachers/students and four heterogeneous KD configurations, showing that **teacher modality is the dominant factor** in distillation efficacy.
-
----
 
 ## Repository Structure
 
@@ -71,8 +65,6 @@ ScentOR/
     └── student_models/
 ```
 
----
-
 ## Reproduction Guide
 
 ### Prerequisites
@@ -86,8 +78,6 @@ pip install -r requirements.txt
 ```
 
 Key dependencies: `torch`, `transformers`, `rdkit`, `scikit-learn`, `xgboost`, `lightgbm`, `catboost`, `imbalanced-learn`, `captum`, `egnn-pytorch`, `se3-transformer-pytorch`, `biopython`, `shap`, `tqdm`
-
----
 
 ### Quick Start (Using Pre-computed Embeddings)
 
@@ -117,8 +107,6 @@ python evaluate_baseline_teacher.py
 python aggregate.py
 ```
 
----
-
 ### Full Reproduction (From Raw Data)
 
 #### Phase 1: Dataset Curation
@@ -129,6 +117,7 @@ python 01_smiles_validation.py
 ```
 
 **Input**: `data/pairs.csv` (M2OR database export, semicolon-delimited)
+
 **Output**: `pairs_validated.csv` — curated dataset (39,723 pairs from 53,444 initial entries)
 
 This script performs multi-stage filtering: mixture removal (whitespace/dot in SMILES), RDKit parsing, 3D conformer generation via `AllChem.EmbedMolecule`, and strict stereoisomer enumeration. Molecules with ambiguous stereocenters or failed 3D embedding are excluded.
@@ -290,8 +279,6 @@ python 09_xai_ood.py
 - `08_xai_oof.py`: Cross-validates OOF predictions for specific ligand–OR pairs (e.g., propionic acid with OR51E2)
 - `09_xai_ood.py`: Tests model behavior on out-of-distribution enantiomers (e.g., (R/S)-sotolon with OR8D1)
 
----
-
 ## Random Seeds
 
 The 20 random seeds used throughout this work encode scientifically meaningful numbers:
@@ -301,7 +288,7 @@ The 20 random seeds used throughout this work encode scientifically meaningful n
 | 42 | Answer to the Ultimate Question of Life, the Universe, and Everything (*The Hitchhiker's Guide to the Galaxy*) |
 | 137 | Fine-structure constant (~1/137), fundamental constant of quantum electrodynamics |
 | 273 | Absolute zero rounded (0 K = -273.15 °C) |
-| 314 | Pi (3.14...) |
+| 314 | $\pi$ (3.14...) |
 | 440 | Concert pitch A4 = 440 Hz |
 | 1013 | Standard atmospheric pressure (1013 hPa) |
 | 1380 | Boltzmann constant (1.380 × 10⁻²³ J/K) |
@@ -310,7 +297,7 @@ The 20 random seeds used throughout this work encode scientifically meaningful n
 | 1729 | Hardy–Ramanujan number (smallest taxicab number) |
 | 1953 | Discovery of the DNA double helix (Watson & Crick, 1953) |
 | 2017 | Transformer architecture published (*Attention Is All You Need*) |
-| 2718 | Euler's number (2.718...) |
+| 2718 | $e$ (2.718...) |
 | 2997 | Speed of light (2.997 × 10⁸ m/s) |
 | 4184 | Specific heat capacity of water (4.184 J/(g·K)) |
 | 5291 | Bohr radius (0.5291 Å) |
@@ -318,8 +305,6 @@ The 20 random seeds used throughout this work encode scientifically meaningful n
 | 6626 | Planck's constant (6.626 × 10⁻³⁴ J·s) |
 | 8314 | Universal gas constant (8.314 J/(mol·K)) |
 | 9648 | Faraday constant (96485 C/mol) |
-
----
 
 ## Data Availability
 
@@ -331,8 +316,6 @@ The 20 random seeds used throughout this work encode scientifically meaningful n
 
 **Model Weights**: Trained teacher (`.model`) and student (`.pt`) weights for all 20 seeds are available upon request or will be uploaded as a release artifact.
 
----
-
 ## Computational Resources
 
 All experiments were performed on a high-performance computing cluster:
@@ -341,7 +324,9 @@ All experiments were performed on a high-performance computing cluster:
 - **RAM**: 256 GB
 - **OS**: Rocky Linux 8.10
 
----
+## License
+
+MIT License
 
 ## Citation
 
@@ -353,19 +338,6 @@ If you use ScentOR in your research, please cite:
   author={Kim, Eun Cheol and Jung, YounJoon},
   journal={Journal of Chemical Information and Modeling},
   year={2026},
-  note={Submitted}
+  note={In preparation}
 }
 ```
-
----
-
-## License
-
-MIT License
-
----
-
-## Contact
-
-- **Eun Cheol Kim** — Department of Chemistry, Seoul National University
-- **YounJoon Jung** — Department of Chemistry, Seoul National University
