@@ -22,6 +22,7 @@ ScentOR/
 │
 ├── data/
 │   ├── pairs.csv                         # M2OR raw dataset (see Data Availability)
+│   ├── final_dataset_weighted.csv        # Curated dataset with confidence weights (see Data Availability)
 │   └── final_embeddings_all.pkl          # Pre-computed embeddings
 │
 ├── preprocessing/
@@ -60,7 +61,7 @@ ScentOR/
 │   ├── 08_xai_oof.py                     # OOF validation for specific odorant ligand–OR protein pairs
 │   └── 09_xai_ood.py                     # Out-of-distribution test
 │
-└── models/                               # Trained model weights (see below)
+└── models/                               # See "Model Weights" in Data Availability
     ├── teacher_models/
     └── student_models/
 ```
@@ -79,9 +80,9 @@ pip install -r requirements.txt
 
 Key dependencies: `torch`, `transformers`, `rdkit`, `scikit-learn`, `xgboost`, `lightgbm`, `catboost`, `imbalanced-learn`, `captum`, `egnn-pytorch`, `se3-transformer-pytorch`, `biopython`, `shap`, `tqdm`
 
-### Quick Start (Using Pre-computed Embeddings)
+### Quick Start (Using Pre-computed Data)
 
-If you want to skip the embedding generation steps (Phase 1–2) and jump directly to model training, use the provided `data/final_embeddings_all.pkl`:
+If you want to skip the preprocessing steps (Phase 1–2) and jump directly to model training, use the provided `data/final_dataset_weighted.csv` and `data/final_embeddings_all.pkl`:
 
 ```bash
 # Phase 3: Grid Search (single seed, first fold — for hyperparameter selection)
@@ -312,9 +313,34 @@ The 20 random seeds used throughout this work encode scientifically meaningful n
 
 > Lalis, M. et al. M2OR: a database of olfactory receptor–odorant pairs for understanding the molecular mechanisms of olfaction. *Nucleic Acids Res.* **2024**, *52*(D1), D1370-D1379.
 
+**Curated Dataset**: `data/final_dataset_weighted.csv` is the preprocessed dataset derived from M2OR, produced by `01_smiles_validation.py` through `03_weight_assignment.py`. It contains curated odorant ligand–OR protein pairs with confidence-based sample weights and is the direct input to all model training scripts (Phase 3 onward).
+
 **Pre-computed Embeddings**: `data/final_embeddings_all.pkl` contains all four embedding types (ligand semantic, protein semantic, ligand structural, protein structural) and is provided for convenience to enable reproduction from Phase 3 onward without requiring GPU-intensive embedding generation or external API access.
 
-**Model Weights**: Trained teacher (`.model`) and student (`.pt`) weights for all 20 seeds are available upon request or will be uploaded as a release artifact.
+**Model Weights**: Trained teacher (`.model`) and student (`.pt`) weights for all 20 seeds × 10 folds are archived on Zenodo:
+
+> [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20019062.svg)](https://doi.org/10.5281/zenodo.20019062)
+>
+> Kim, E. C., & Jung, Y. (2026). ScentOR: Trained Model Weights [Data set]. Zenodo. https://doi.org/10.5281/zenodo.20019062
+
+The archive contains two compressed files:
+
+| File | Contents | Size (approx.) |
+|------|----------|----------------|
+| `teacher_models.tar.gz` | LightGBM, XGBoost, CatBoost `.model` files (20 seeds × 10 folds × 2 modalities × 3 models) | 536.1 MB |
+| `student_models.tar.gz` | PyTorch `.pt` checkpoints for Scenarios V–VIII (20 seeds × 10 folds × 4 scenarios) | 17.9 GB |
+
+Baseline student weights (Scenarios III–IV) are not included, as they correspond to α = 0 (no distillation) and can be reproduced by running `train_kd_student.py` with α = 0. To use the pre-trained weights, download and extract into the `models/` directory:
+
+```bash
+# Download from Zenodo
+wget https://zenodo.org/records/20019062/files/teacher_models.tar.gz
+wget https://zenodo.org/records/20019062/files/student_models.tar.gz
+
+# Extract into models/
+tar -xzf teacher_models.tar.gz -C models/
+tar -xzf student_models.tar.gz -C models/
+```
 
 ## Computational Resources
 
