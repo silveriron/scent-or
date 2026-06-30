@@ -4,7 +4,7 @@
 
 A heterogeneous knowledge distillation (KD) framework for computational deorphanization of human olfactory receptors (ORs). ScentOR bridges gradient boosting (GB)-based teacher models with neural network (NN)-based student models using bidirectional gated cross-attention, achieving robust odorant ligand–OR protein interaction prediction from 1D sequence-based embeddings without explicit 3D structural input.
 
-> **Paper**: Eun Cheol Kim and YounJoon Jung. ScentOR: Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization. *In preparation for Journal of Chemical Information and Modeling*.
+> **Paper**: Eun Cheol Kim and YounJoon Jung. ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization. *In preparation*.
 
 ## Overview
 
@@ -21,11 +21,12 @@ ScentOR/
 ├── LICENSE
 │
 ├── data/
-│   ├── pairs.csv                         # M2OR raw dataset (see Data Availability)
-│   ├── final_dataset_weighted.csv        # Curated dataset with confidence weights (see Data Availability)
-│   └── final_embeddings_all.pkl          # Pre-computed embeddings
+│   ├── pairs.csv                         # M2OR export — NOT included; download from M2OR website
+│   ├── final_dataset_weighted.csv        # Curated annotations (IDs, labels, weights; no raw strings)
+│   └── final_embeddings_all.pkl          # Pre-computed embeddings (InChIKey-annotated ligands)
 │
 ├── preprocessing/
+│   ├── 00_restore_raw_strings.py         # (XAI helper) restore raw SMILES/sequences from M2OR export
 │   ├── 01_smiles_validation.py           # SMILES curation & stereoisomer filtering
 │   ├── 02_embedding_generation.py        # MoLFormer + ProtT5 semantic embeddings
 │   ├── 03_weight_assignment.py           # Confidence-based sample weighting
@@ -282,7 +283,7 @@ python 09_xai_ood.py
 
 ## Random Seeds
 
-The 20 random seeds used throughout this work encode scientifically meaningful numbers:
+The 20 random seeds used throughout this work are listed below for exact reproducibility. Several values were chosen as mnemonic references to familiar scientific constants or milestones.
 
 | Seed | Significance |
 |------|-------------|
@@ -307,37 +308,79 @@ The 20 random seeds used throughout this work encode scientifically meaningful n
 | 8314 | Universal gas constant (8.314 J/(mol·K)) |
 | 9648 | Faraday constant (96485 C/mol) |
 
-## Data Availability
+## Data and Software Availability
 
-**M2OR Dataset**: The M2OR database is available at [https://m2or.chemsensim.fr/](https://m2or.chemsensim.fr/). The raw `pairs.csv` file included in this repository was obtained from the M2OR database website. Please refer to the original publication for licensing terms:
+### Primary Data: M2OR Database
 
-> Lalis, M. et al. M2OR: a database of olfactory receptor–odorant pairs for understanding the molecular mechanisms of olfaction. *Nucleic Acids Res.* **2024**, *52*(D1), D1370-D1379.
+This work is based on the **M2OR database**, available at [https://m2or.chemsensim.fr/](https://m2or.chemsensim.fr/):
 
-**Curated Dataset**: `data/final_dataset_weighted.csv` is the preprocessed dataset derived from M2OR, produced by `01_smiles_validation.py` through `03_weight_assignment.py`. It contains curated odorant ligand–OR protein pairs with confidence-based sample weights and is the direct input to all model training scripts (Phase 3 onward).
+> Lalis, M. et al. M2OR: a database of olfactory receptor–odorant pairs for understanding the molecular mechanisms of olfaction. *Nucleic Acids Res.* **2024**, *52*(D1), D1370–D1379.
 
-**Pre-computed Embeddings**: `data/final_embeddings_all.pkl` contains all four embedding types (ligand semantic, protein semantic, ligand structural, protein structural) and is provided for convenience to enable reproduction from Phase 3 onward without requiring GPU-intensive embedding generation or external API access.
+Because the M2OR website does not explicitly specify redistribution terms for its source records, **the raw M2OR export (`pairs.csv`) is not included in this repository.** To run the full pipeline from raw data, download the M2OR dataset directly from the M2OR website and place the export at `data/pairs.csv`. The curation scripts (`01_smiles_validation.py`–`03_weight_assignment.py`) reproduce the curated dataset from this export, applying the selection and filtering criteria described in the manuscript (39,723 pairs retained from 53,444 initial entries).
 
-**Model Weights**: Trained teacher (`.model`) and student (`.pt`) weights for all 20 seeds × 10 folds are archived on Zenodo:
+### Curated Annotation Table
 
-> [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20019062.svg)](https://doi.org/10.5281/zenodo.20019062)
->
+`data/final_dataset_weighted.csv` contains the curated dataset **annotations** required for all model training and evaluation (Phase 3 onward):
+
+| Column | Description |
+|--------|-------------|
+| `main_compounds_id` | M2OR compound identifier (lookup key for ligand embeddings) |
+| `main_receptors_id` | M2OR receptor identifier (lookup key for protein embeddings) |
+| `responsive` | Binary responsiveness label (1 = responsive, 0 = non-responsive) |
+| `data_quality` | M2OR assay quality flag |
+| `sample_weight` | Confidence-based sample weight |
+
+Raw molecular structures, SMILES strings, protein sequences, and the original M2OR export are not redistributed by this repository. The raw SMILES and protein sequences can be restored by joining `main_compounds_id` / `main_receptors_id` against the M2OR export. The training and evaluation scripts (Phase 3–6) do not require these strings and run directly on this table together with the precomputed embeddings.
+
+### Precomputed Embeddings
+
+`data/final_embeddings_all.pkl` provides all four embedding types, indexed by M2OR compound/receptor identifiers, to enable exact reproduction from Phase 3 onward without GPU-intensive embedding generation or external API access (embedding generation can vary slightly across hardware):
+
+| Key | Description | Dim |
+|-----|-------------|-----|
+| `ligand_embeddings` | MoLFormer-XL semantic embeddings | 768 |
+| `protein_embeddings` | ProtT5-XL semantic embeddings | 1024 |
+| `ligand_structure_embeddings` | EGNN structural control embeddings | 512 |
+| `protein_structure_embeddings` | SE(3)-Transformer structural control embeddings | 512 |
+| `metadata_ligands` | Ligand InChIKeys (for identification) | — |
+| `metadata_proteins` | Reserved (sequences not redistributed) | — |
+
+Ligand entries are annotated with **InChIKeys** for structure identification. Raw SMILES strings and protein sequences are not stored in this file; retrieve them from the M2OR export via the provided identifiers if needed.
+
+### Explainability (XAI) Analyses
+
+The XAI scripts (`analysis/03_xai_screening.py`, `analysis/04_xai_ig.py`, `analysis/06_xai_muta.py`, `analysis/08_xai_oof.py`, `analysis/09_xai_ood.py`) require raw SMILES/sequences for a small number of specific pairs reported in the manuscript. A helper script, `preprocessing/00_restore_raw_strings.py`, restores these strings locally by joining the curated annotation table against the M2OR export you download yourself. No raw molecular structures, SMILES strings, protein sequences, or original M2OR export files are redistributed by this repository.
+
+1. Obtain the M2OR export as described above and place it at `data/pairs.csv`.
+2. Run the helper to produce a local working copy with raw strings restored:
+
+   ```bash
+   python preprocessing/00_restore_raw_strings.py \
+       --m2or data/pairs.csv \
+       --curated data/final_dataset_weighted.csv \
+       --out data/final_dataset_weighted_with_strings.csv \
+       --canonicalize
+   ```
+
+   The `--canonicalize` flag standardizes SMILES with RDKit to exactly match the representation produced by the curation pipeline (recommended).
+3. Point the XAI scripts' `RAW_DATA_CSV` at `data/final_dataset_weighted_with_strings.csv`.
+
+Out-of-distribution test structures (e.g., (R/S)-sotolon) are specified directly within `analysis/09_xai_ood.py` and require no external data.
+
+### Model Weights
+
+Trained teacher (`.model`) and student (`.pt`) weights for all 20 seeds × 10 folds are archived on Zenodo:
+
 > Kim, E. C., & Jung, Y. (2026). ScentOR: Trained Model Weights [Data set]. Zenodo. https://doi.org/10.5281/zenodo.20019062
-
-The archive contains two compressed files:
 
 | File | Contents | Size (approx.) |
 |------|----------|----------------|
-| `teacher_models.tar.gz` | LightGBM, XGBoost, CatBoost `.model` files (20 seeds × 10 folds × 2 modalities × 3 models) | 536.1 MB |
-| `student_models.tar.gz` | PyTorch `.pt` checkpoints for Scenarios V–VIII (20 seeds × 10 folds × 4 scenarios) | 17.9 GB |
-
-Baseline student weights (Scenarios III–IV) are not included, as they correspond to α = 0 (no distillation) and can be reproduced by running `train_kd_student.py` with α = 0. To use the pre-trained weights, download and extract into the `models/` directory:
+| `teacher_models.tar.gz` | LightGBM, XGBoost, CatBoost `.model` files | 536.1 MB |
+| `student_models.tar.gz` | PyTorch `.pt` checkpoints for Scenarios V–VIII | 17.9 GB |
 
 ```bash
-# Download from Zenodo
 wget https://zenodo.org/records/20019062/files/teacher_models.tar.gz
 wget https://zenodo.org/records/20019062/files/student_models.tar.gz
-
-# Extract into models/
 tar -xzf teacher_models.tar.gz -C models/
 tar -xzf student_models.tar.gz -C models/
 ```
@@ -352,17 +395,20 @@ All experiments were performed on a high-performance computing cluster:
 
 ## License
 
-MIT License
+The source code, documentation, configuration files, scripts, curated annotation table, and precomputed embeddings distributed in this GitHub repository are released under the MIT License, except where otherwise noted.
+
+The trained model weights archived on Zenodo are released under the Creative Commons Attribution 4.0 International License (CC-BY 4.0).
+
+This repository does not redistribute the raw M2OR database. The preprocessing scripts provide a reproducible workflow for reconstructing the curated dataset from the original M2OR source. Users are responsible for complying with the terms of the upstream data sources, pretrained models, and software dependencies cited in the manuscript and this repository.
 
 ## Citation
 
 If you use ScentOR in your research, please cite:
 
 ```bibtex
-@article{kim2026scentor,
-  title={ScentOR: Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization},
+@misc{kim2026scentor,
+  title={ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization},
   author={Kim, Eun Cheol and Jung, YounJoon},
-  journal={Journal of Chemical Information and Modeling},
   year={2026},
   note={In preparation}
 }
