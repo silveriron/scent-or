@@ -1,0 +1,179 @@
+04_significance_modality:
+  xgboost:
+    semantic: [0.477, 0.004]
+    hybrid: [0.489, 0.004]
+    delta: 0.0115
+    cohens_dz: 2.87
+    adjusted_p: 1.60e-10
+  lightgbm:
+    semantic: [0.477, 0.003]
+    hybrid: [0.484, 0.004]
+    delta: 0.0070
+    cohens_dz: 1.39
+    adjusted_p: 5.60e-6
+  catboost:
+    semantic: [0.453, 0.003]
+    hybrid: [0.465, 0.003]
+    delta: 0.0112
+    cohens_dz: 3.28
+    adjusted_p: 3.24e-11
+  student:
+    semantic: [0.470, 0.006]
+    hybrid: [0.480, 0.005]
+    delta: 0.0104
+    cohens_dz: 1.55
+    adjusted_p: 1.70e-6
+
+07_dataset_audit:
+  human_ors: 1165
+  nonhuman_ors: 173
+  organisms: 16
+  mus_musculus: 145
+  uniparc_archived: 978
+  unarchived_variants: 355
+  tagged_constructs: 5
+
+08_species_restricted_eval:
+  auroc_human_only: [0.9543, 0.0010]
+  auroc_full: [0.9541, 0.0010]
+  auroc_mus: 0.9416
+
+09_near_identical_variants:
+  near_identical_pairs: 1595
+  opposite_label_triples: 867
+  distance_one_triples: 300
+  distance_one_pairs: 149
+  distance_two_pairs: 391
+  ranking_accuracy_overall: [0.554, 0.023]
+  ranking_accuracy_d1: 0.391
+  ranking_accuracy_d2: 0.641
+  ranking_accuracy_ec50: [0.437, 0.042]
+  strict_separation: [0.098, 0.020]
+  cosine_mean: 0.99970
+  cosine_median: 0.99981
+
+10_panel_screening:
+  isoeugenol:
+    N: 457
+    K: 116
+    auroc: [0.9001, 0.0059]
+    auprc: [0.7359, 0.0153]
+    precision_at_K: [0.6978, 0.0159]
+    enrichment: 2.75
+    recall_at_Kprime: [0.5806, 0.0204]
+    K_prime: 91
+  androstenone:
+    N: 637
+    K: 95
+    auroc: [0.8123, 0.0074]
+    auprc: [0.4288, 0.0152]
+    precision_at_K: [0.3868, 0.0229]
+    enrichment: 2.59
+    recall_at_Kprime: [0.4932, 0.0242]
+    K_prime: 127
+
+13_fn_margin:
+  total_oof: 794460
+  false_negatives: 20248
+  within_0p10_pct: 27.7
+  below_0p30_pct: 22.4
+  or51e2_best_margin: -0.0075
+  or51e2_percentile: 65
+
+11_additivity_decomposition:
+  additive_r2: [0.15052, 0.00334]
+  interaction_share: [0.84948, 0.00334]
+  ligand_marginal: 0.11706
+  or_marginal: 0.03400
+  probability_scale_interaction: 0.857
+  median_iterations: 23
+
+12_structure_accuracy:
+  global_ca_rmsd: 4.30
+  within_2A_pct: 42.7
+  within_3A_pct: 59.9
+  contact_mean_deviation: 3.05
+  r262_deviation: 5.36
+  h180_deviation: 5.01
+  cles_ig: [0.531, 0.365, 0.696]
+  cles_dp: [0.509, 0.326, 0.685]
+  median_rank_ig: 134
+  median_rank_dp: 129
+
+16_stereoisomer_exhaustive:
+  stereoisomeric_pairs: 27
+  usable_pairs: 12
+  instances: 129
+  ors: 126
+  ordered_combinations: 15
+  seed_instances: 2580
+  case_weighted_accuracy: [0.822, 0.018]
+  label_balanced_accuracy: 0.335
+  strict_separation: [0.252, 0.029]
+  correct_ordering_pct: 82.2
+  correct_below_threshold_pct: 39.5
+  correct_above_threshold_pct: 17.5
+  below_threshold_any_ordering_pct: 46.3
+
+20_attribution_registry:
+  ig_or_comparison:
+    n: 108
+    within_median: 0.834
+    within_iqr: [0.736, 0.918]
+    floor_median: 0.571
+    floor_iqr: [0.513, 0.610]
+    hl: 0.243
+    ci: [0.218, 0.268]
+    wilcoxon_p: 1.9e-19
+    n_exceeding_floor: 108
+  ig_or_cluster:
+    n: 18
+    hl: 0.227
+    ci: [0.204, 0.274]
+    sign_test: [18, 18, 7.6e-6]
+  dp_or_comparison:
+    n: 108
+    within_median: 0.676
+    floor_median: 0.640
+    hl: -0.007
+    ci: [-0.036, 0.021]
+    sign_test: [55, 108, 0.923]
+  dp_or_cluster:
+    n: 18
+    within_median: 0.647
+    floor_median: 0.640
+    hl: -0.011
+    ci: [-0.058, 0.042]
+  ig_ligand_comparison:
+    n: 69
+    within_median: 0.931
+    floor_median: 0.876
+    hl: 0.026
+    ci: [0.003, 0.044]
+    sign_test: [46, 69, 0.008]
+  ig_ligand_cluster:
+    n: 12
+    hl: 0.052
+    ci: [0.022, 0.087]
+
+21_untrained_control:
+  ig_first_untrained: 10
+  ig_first_trained: 10
+  ig_overlap: 7
+  dp_first_untrained: 0
+  dp_first_trained: 7
+  ors: 17
+  poisson_binomial_expectation: 0.054
+  p_ig: 2.0e-21
+  p_dp: 6.1e-14
+  both_first: 4
+  agree_top1: 8
+  rank_correlation: -0.02
+
+24_class1_candidates:
+  pairs: 111
+  receptor_entries: 37
+  gene_symbols: 31
+
+25_determinism_check:
+  archive_members_matched: 800

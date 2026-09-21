@@ -115,13 +115,9 @@ def generate_embeddings(smiles, sequence):
     return l_emb, p_emb
 
 def load_thresholds(csv_path=THRESHOLD_CSV):
-    """
-    Load pre-computed thresholds from xai_threshold.py output.
-    Returns dict: {(seed, fold): threshold}
-    """
     if not os.path.exists(csv_path):
         print(f"  [Error] Threshold CSV not found: {csv_path}")
-        print(f"          Run xai_threshold.py first to generate it.")
+        print(f"          Run 01_threshold_fitting.py first to generate it.")
         return {}
     df = pd.read_csv(csv_path)
     return {(int(row['Seed']), int(row['Fold'])): float(row['Threshold'])
@@ -150,7 +146,7 @@ if __name__ == "__main__":
     df_raw = pd.read_csv(RAW_DATA_CSV)
     labels = df_raw['responsive'].values.flatten()
 
-    target_mask = (df_raw['main_compounds_id'] == COMPOUND_ID) & \
+    target_mask = (df_raw['main_compounds_id'] == COMPOUND_ID) &\
                   (df_raw['main_receptors_id'] == RECEPTOR_ID)
     if not target_mask.any():
         print(f"\n  [Error] Pair (compound={COMPOUND_ID}, receptor={RECEPTOR_ID}) not found in dataset.")
@@ -160,7 +156,7 @@ if __name__ == "__main__":
 
     threshold_map = load_thresholds()
     if not threshold_map:
-        print("\n  [Warning] No thresholds loaded. Run xai_threshold.py first.")
+        print("\n  [Warning] No thresholds loaded. Run 01_threshold_fitting.py first.")
 
     l_emb, p_emb = generate_embeddings(PROPIONIC_ACID_SMILES, OR51E2_SEQUENCE)
 

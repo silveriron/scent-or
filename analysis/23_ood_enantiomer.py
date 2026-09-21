@@ -73,7 +73,7 @@ class StudentModelSemantic(nn.Module):
 def load_thresholds(csv_path=THRESHOLD_CSV):
     if not os.path.exists(csv_path):
         print(f"  [Error] Threshold CSV not found: {csv_path}")
-        print(f"          Run xai_threshold.py first to generate it.")
+        print(f"          Run 01_threshold_fitting.py first to generate it.")
         return {}
     df = pd.read_csv(csv_path)
     return {(int(row['Seed']), int(row['Fold'])): float(row['Threshold'])
@@ -124,7 +124,7 @@ def generate_embeddings(smiles_list, sequence):
 def run_inference(l_embs, p_emb):
     threshold_map = load_thresholds()
     if not threshold_map:
-        print("  [Warning] No thresholds loaded. Run xai_threshold.py first.")
+        print("  [Warning] No thresholds loaded. Run 01_threshold_fitting.py first.")
 
     results = []
 

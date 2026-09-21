@@ -1,16 +1,22 @@
 # ScentOR
 
-**S**emantic **C**hemical **E**ncoder via **N**eural **T**ransfer for **O**lfactory **R**eceptors
+**S**emantic **C**hemical **E**ncoder via **N**eural **T**ransfer for **O**dorant **R**eceptors
 
-A heterogeneous knowledge distillation (KD) framework for computational deorphanization of human olfactory receptors (ORs). ScentOR bridges gradient boosting (GB)-based teacher models with neural network (NN)-based student models using bidirectional gated cross-attention, achieving robust odorant ligand–OR protein interaction prediction from 1D sequence-based embeddings without explicit 3D structural input.
+A heterogeneous knowledge distillation (KD) framework for computational deorphanization of odorant receptors (ORs). ScentOR bridges gradient boosting (GB)-based teacher models with neural network (NN)-based student models using bidirectional gated cross-attention, achieving robust odorant ligand–OR protein interaction prediction from 1D sequence-based embeddings without explicit 3D structural input.
 
-> **Paper**: Eun Cheol Kim and YounJoon Jung. ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization. *In preparation*.
+> **Paper**: *ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Odorant Receptor Deorphanization*
+> Eun Cheol Kim and YounJoon Jung — Department of Chemistry, Seoul National University
+> Under review
 
 ## Overview
 
 ScentOR demonstrates that combining the implicit evolutionary knowledge of 1D sequence-based foundation models (MoLFormer for ligands, ProtT5 for proteins) with the non-linear physicochemical decision boundaries of a GB teacher yields superior generalization for OR deorphanization — without requiring any explicit 3D structural prior.
 
 The framework systematically evaluates eight scenarios (I–VIII) spanning baseline teachers/students and four heterogeneous KD configurations, showing that **teacher modality is the dominant factor** in distillation efficacy.
+
+### Dataset composition
+
+The curated benchmark comprises 39,723 odorant ligand–OR protein pairs over 552 odorant ligands and 1,338 OR protein sequences spanning 16 organisms: 1,165 human and 173 non-human, of which *Mus musculus* accounts for 145. Restricting evaluation to the human subset reproduces the reported AUROC to within 0.001. The overall positive rate is 6.16% (2,448 positives), a class ratio of 1:15.23.
 
 ## Repository Structure
 
@@ -21,7 +27,7 @@ ScentOR/
 ├── LICENSE
 │
 ├── data/
-│   ├── pairs.csv                         # M2OR export — NOT included; download from M2OR website
+│   ├── pairs.csv                         # M2OR raw export — NOT redistributed, see Data Availability
 │   ├── final_dataset_weighted.csv        # Curated annotations (IDs, labels, weights; no raw strings)
 │   └── final_embeddings_all.pkl          # Pre-computed embeddings (InChIKey-annotated ligands)
 │
@@ -52,15 +58,39 @@ ScentOR/
 │   └── aggregate.py                      # Aggregate 20-seed results into summary tables
 │
 ├── analysis/
-│   ├── 01_p_value_baseline.py            # Statistical testing for baselines (I–IV)
-│   ├── 02_p_value_kd.py                  # Statistical testing for KD scenarios (V–VIII)
-│   ├── 03_xai_screening.py               # Robust TP screening & minimal pair finder
-│   ├── 04_xai_ig.py                      # Integrated gradients analysis
-│   ├── 05_xai_shap.py                    # SHAP-based feature importance analysis
-│   ├── 06_xai_muta.py                    # In silico alanine mutagenesis
-│   ├── 07_xai_threshold.py               # Threshold reconstruction from checkpoints
-│   ├── 08_xai_oof.py                     # OOF validation for specific odorant ligand–OR protein pairs
-│   └── 09_xai_ood.py                     # Out-of-distribution test
+│   ├── stats_utils.py                    # Shared statistical routines (Section S6 conventions)
+│   ├── 01_threshold_fitting.py           # MCC-optimal thresholds from student checkpoints
+│   ├── 02_significance_baseline.py       # Statistical testing for baselines (I–IV)
+│   ├── 03_significance_kd.py             # Statistical testing for KD scenarios (V–VIII)
+│   ├── 04_significance_modality.py       # Structural modality effect in the non-distilled baselines
+│   ├── 05_uniparc_lookup.py              # UniParc resolution of curated OR sequences
+│   ├── 06_species_assignment.py          # Organism assignment and near-identical variant groups
+│   ├── 07_dataset_audit.py               # Dataset composition by organism and variant status
+│   ├── 08_species_restricted_eval.py     # Metrics on species-defined subsets
+│   ├── 09_near_identical_variants.py     # Opposite-label variant triples
+│   ├── 10_panel_screening.py             # Panel-level screening metrics
+│   ├── 11_additivity_decomposition.py    # Ligand / OR / interaction variance decomposition
+│   ├── 12_structure_accuracy.py          # ESMFold OR51E2 against PDB 8F76
+│   ├── 13_fn_margin.py                   # False-negative margins to the fold thresholds
+│   ├── 14_modality_shap.py               # SHAP-based feature importance analysis
+│   ├── 15_case_screening.py              # Robust TP screening & minimal pair finder
+│   ├── 16_stereoisomer_exhaustive.py     # Exhaustive stereoisomer pair analysis
+│   ├── 17_integrated_gradients.py        # Integrated gradients analysis
+│   ├── 18_alanine_mutagenesis.py         # In silico alanine mutagenesis
+│   ├── 19_attribution_sample.py          # Attribution sample selection
+│   ├── 20_attribution_registry.py        # Profile similarity against the across-seed floor
+│   ├── 21_untrained_control.py           # DRY motif rank under untrained weights
+│   ├── 22_oof_validation.py              # OOF validation for specific pairs
+│   ├── 23_ood_enantiomer.py              # Out-of-distribution enantiomer test
+│   ├── 24_class1_candidates.py           # Class I case-selection filters
+│   └── 25_determinism_check.py           # Single-seed determinism re-run
+│
+├── tests/
+│   ├── canonical_values.yaml             # Values printed in the manuscript
+│   └── test_regression.py                # Checks the stored outputs against them
+│
+├── tools/
+│   └── check_manifest.py                 # Keeps this README and the tracked modules in step
 │
 └── models/                               # See "Model Weights" in Data Availability
     ├── teacher_models/
@@ -236,8 +266,8 @@ python aggregate.py
 
 ```bash
 cd analysis/
-python 01_p_value_baseline.py    # Scenarios I–IV (baseline comparisons)
-python 02_p_value_kd.py          # Scenarios V–VIII (KD comparisons)
+python 02_significance_baseline.py    # Scenarios I–IV (baseline comparisons)
+python 03_significance_kd.py          # Scenarios V–VIII (KD comparisons)
 ```
 
 Statistical testing pipeline:
@@ -252,34 +282,116 @@ Statistical testing pipeline:
 cd analysis/
 
 # Step 1: Screen robust TP pairs and find minimal pairs
-python 03_xai_screening.py
+python 15_case_screening.py
 
 # Step 2: Integrated Gradients (macroscopic + microscopic)
-python 04_xai_ig.py
+python 17_integrated_gradients.py
 
 # Step 3: SHAP-based feature importance analysis
-python 05_xai_shap.py
+python 14_modality_shap.py
 
 # Step 4: In silico alanine mutagenesis
-python 06_xai_muta.py
+python 18_alanine_mutagenesis.py
 
 # Step 5: Threshold reconstruction from checkpoints
-python 07_xai_threshold.py
+python 01_threshold_fitting.py
 
 # Step 6 (Optional): OOF validation for specific pairs
-python 08_xai_oof.py
+python 22_oof_validation.py
 
 # Step 7 (Optional): Out-of-distribution enantiomer test
-python 09_xai_ood.py
+python 23_ood_enantiomer.py
 ```
 
-- `03_xai_screening.py`: Identifies robust TP pairs (≥ 80% TP rate across 20 seeds) for macroscopic XAI and minimal pairs (high Tanimoto similarity, opposite predictions) for microscopic XAI
-- `04_xai_ig.py`: Computes per-residue and per-atom integrated gradients via Captum, saving attribution vectors as `.npy` files
-- `05_xai_shap.py`: Calculates SHAP-based feature importance decomposition (ligand/protein × semantic/structural) across all seeds and folds
-- `06_xai_muta.py`: Performs sequential alanine substitution (glycine for native alanine) to evaluate residue-level functional indispensability via ΔP
-- `07_xai_threshold.py`: Reconstructs MCC-optimal decision thresholds from trained student model checkpoints; required by `08_xai_oof.py` and `09_xai_ood.py`
-- `08_xai_oof.py`: Cross-validates OOF predictions for specific ligand–OR pairs (e.g., propionic acid with OR51E2)
-- `09_xai_ood.py`: Tests model behavior on out-of-distribution enantiomers (e.g., (R/S)-sotolon with OR8D1)
+- `15_case_screening.py`: Identifies robust TP pairs (≥ 80% TP rate across 20 seeds) for macroscopic XAI and minimal pairs (high Tanimoto similarity, opposite predictions) for microscopic XAI
+- `17_integrated_gradients.py`: Computes per-residue and per-atom integrated gradients via Captum, saving attribution vectors as `.npy` files
+- `14_modality_shap.py`: Calculates SHAP-based feature importance decomposition (ligand/protein × semantic/structural) across all seeds and folds
+- `18_alanine_mutagenesis.py`: Performs sequential alanine substitution (glycine for native alanine) to evaluate residue-level functional indispensability via ΔP
+- `01_threshold_fitting.py`: Reconstructs MCC-optimal decision thresholds from trained student model checkpoints; required by `22_oof_validation.py` and `23_ood_enantiomer.py`
+- `22_oof_validation.py`: Cross-validates OOF predictions for specific ligand–OR pairs (e.g., propionic acid with OR51E2)
+- `23_ood_enantiomer.py`: Tests model behavior on out-of-distribution enantiomers (e.g., (R/S)-sotolon with OR8D1)
+
+#### Phase 9: Extended Analyses
+
+These scripts re-aggregate the stored out-of-fold predictions and attribution outputs produced in Phases 4–8. **No model is retrained and no threshold is re-optimized**; every analysis inherits the models and thresholds of the main pipeline. The one exception is `25_determinism_check.py`, which deliberately re-runs a single seed to confirm that the pipeline is deterministic.
+
+```bash
+cd analysis/
+
+python 04_significance_modality.py
+python 05_uniparc_lookup.py
+python 06_species_assignment.py
+python 07_dataset_audit.py
+python 08_species_restricted_eval.py
+python 09_near_identical_variants.py
+python 10_panel_screening.py
+python 11_additivity_decomposition.py
+python 12_structure_accuracy.py
+python 13_fn_margin.py
+python 16_stereoisomer_exhaustive.py
+python 19_attribution_sample.py
+python 20_attribution_registry.py
+python 21_untrained_control.py
+python 24_class1_candidates.py
+```
+
+Shared statistical routines (Hodges–Lehmann estimates, distribution-free intervals, sign tests, cluster reduction, Benjamini–Hochberg correction) are collected in `stats_utils.py` and follow the conventions specified in Section S6 of the Supporting Information.
+
+After changing any script or this README, check that the manifest below is still consistent and that the stored outputs still reproduce the published numbers:
+
+```bash
+python tools/check_manifest.py
+python -m pytest tests/test_regression.py -q
+```
+
+## Mapping to the Manuscript
+
+Script numbering reflects execution order and dependencies, not the location of the corresponding result in the paper. The table below is the authoritative mapping; it is the only place in this repository where manuscript locations are recorded. `analysis/stats_utils.py` is a library rather than a step and does not appear.
+
+| Script | Main text | Supporting Information |
+|---|---|---|
+| `preprocessing/00_restore_raw_strings.py` | Dataset Curation and Preprocessing | S1 |
+| `preprocessing/01_smiles_validation.py` | Dataset Curation and Preprocessing | S1, S1.1 |
+| `preprocessing/02_embedding_generation.py` | Computational Methods | S2.1 |
+| `preprocessing/03_weight_assignment.py` | Dataset Curation and Preprocessing | S1.1 |
+| `preprocessing/04_ligand_3d_embedding.py` | Computational Methods | S2.3.5 |
+| `preprocessing/05_protein_3d_embedding.py` | Computational Methods | S2.3.5 |
+| `preprocessing/06_merge_embeddings.py` | Computational Methods | S2.1 |
+| `training/gridsearch/gridsearch_lgb.py` | Table 5 | S5.1, Figures S1–S4 |
+| `training/gridsearch/gridsearch_xgb.py` | Table 5 | S5.1, Figures S1–S4 |
+| `training/gridsearch/gridsearch_cat.py` | Table 5 | S5.1, Figures S1–S4 |
+| `training/teacher/train_teacher_lgb.py` | Tables 3, 4 | S2.2 |
+| `training/teacher/train_teacher_xgb.py` | Tables 3, 4 | S2.2 |
+| `training/teacher/train_teacher_cat.py` | Tables 3, 4 | S2.2 |
+| `training/student/train_kd_student.py` | Table 5 | S2.3.4, S5.3 |
+| `training/student/train_baseline_student.py` | Table 4 | S2.3.4 |
+| `evaluation/evaluate_baseline_teacher.py` | Tables 3, 4 | S3 |
+| `evaluation/aggregate.py` | Tables 3–5 | S6.10 |
+| `analysis/01_threshold_fitting.py` | — | S5.3 |
+| `analysis/02_significance_baseline.py` | Tables 3, 4 | S6.2, Tables S7, S8 |
+| `analysis/03_significance_kd.py` | Table 5 | S6.3, Table S9 |
+| `analysis/04_significance_modality.py` | Structural Modality in the Non-Distilled Baselines | S6.4, Table S10 |
+| `analysis/05_uniparc_lookup.py` | — | S8.1 |
+| `analysis/06_species_assignment.py` | — | S8.1, S1.2 |
+| `analysis/07_dataset_audit.py` | Dataset Curation and Preprocessing | S8.2, S8.3, Figure S5 |
+| `analysis/08_species_restricted_eval.py` | — | S9, Figure S6 |
+| `analysis/09_near_identical_variants.py` | — | S10 |
+| `analysis/10_panel_screening.py` | Figure 4 | S11, S11.2, Table S11 |
+| `analysis/11_additivity_decomposition.py` | Figure 7 | S14, S14.1 |
+| `analysis/12_structure_accuracy.py` | Figure 5 | S12, S13.7, Table S12 |
+| `analysis/13_fn_margin.py` | — | S15, Figure S7 |
+| `analysis/14_modality_shap.py` | Figure 3 | S2.3.7 |
+| `analysis/15_case_screening.py` | — | S4.1 |
+| `analysis/16_stereoisomer_exhaustive.py` | Figure 8 | S4, S4.6, Table S6 |
+| `analysis/17_integrated_gradients.py` | Figures 6, 7 | S13.2, S13.3, S17 |
+| `analysis/18_alanine_mutagenesis.py` | Figures 6, 7 | S13.2, S13.3 |
+| `analysis/19_attribution_sample.py` | — | S13.1, Table S13 |
+| `analysis/20_attribution_registry.py` | Attributions Are Determined by the OR | S13.2, Table S14 |
+| `analysis/21_untrained_control.py` | Figure 7 | S13.5, S13.6, Table S15 |
+| `analysis/22_oof_validation.py` | — | S16.4 |
+| `analysis/23_ood_enantiomer.py` | — | S15 |
+| `analysis/24_class1_candidates.py` | — | S13.10, Table S16 |
+| `analysis/25_determinism_check.py` | — | S16.2 |
 
 ## Random Seeds
 
@@ -349,7 +461,7 @@ Ligand entries are annotated with **InChIKeys** for structure identification. Ra
 
 ### Explainability (XAI) Analyses
 
-The XAI scripts (`analysis/03_xai_screening.py`, `analysis/04_xai_ig.py`, `analysis/06_xai_muta.py`, `analysis/08_xai_oof.py`, `analysis/09_xai_ood.py`) require raw SMILES/sequences for a small number of specific pairs reported in the manuscript. A helper script, `preprocessing/00_restore_raw_strings.py`, restores these strings locally by joining the curated annotation table against the M2OR export you download yourself. No raw molecular structures, SMILES strings, protein sequences, or original M2OR export files are redistributed by this repository.
+The XAI scripts (`analysis/15_case_screening.py`, `analysis/17_integrated_gradients.py`, `analysis/18_alanine_mutagenesis.py`, `analysis/22_oof_validation.py`, `analysis/23_ood_enantiomer.py`) require raw SMILES/sequences for a small number of specific pairs reported in the manuscript. A helper script, `preprocessing/00_restore_raw_strings.py`, restores these strings locally by joining the curated annotation table against the M2OR export you download yourself. No raw molecular structures, SMILES strings, protein sequences, or original M2OR export files are redistributed by this repository.
 
 1. Obtain the M2OR export as described above and place it at `data/pairs.csv`.
 2. Run the helper to produce a local working copy with raw strings restored:
@@ -365,7 +477,7 @@ The XAI scripts (`analysis/03_xai_screening.py`, `analysis/04_xai_ig.py`, `analy
    The `--canonicalize` flag standardizes SMILES with RDKit to exactly match the representation produced by the curation pipeline (recommended).
 3. Point the XAI scripts' `RAW_DATA_CSV` at `data/final_dataset_weighted_with_strings.csv`.
 
-Out-of-distribution test structures (e.g., (R/S)-sotolon) are specified directly within `analysis/09_xai_ood.py` and require no external data.
+Out-of-distribution test structures (e.g., (R/S)-sotolon) are specified directly within `analysis/23_ood_enantiomer.py` and require no external data.
 
 ### Model Weights
 
@@ -407,9 +519,9 @@ If you use ScentOR in your research, please cite:
 
 ```bibtex
 @misc{kim2026scentor,
-  title={ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Human Olfactory Receptor Deorphanization},
+  title={ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Odorant Receptor Deorphanization},
   author={Kim, Eun Cheol and Jung, YounJoon},
   year={2026},
-  note={In preparation}
+  note={Under review}
 }
 ```

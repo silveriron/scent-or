@@ -22,8 +22,8 @@ SCENARIO = "Scenario5"
 
 SEEDS = [42, 137, 273, 314, 440, 1013, 1380, 1602, 1618, 1729, 1953, 2017, 2718, 2997, 4184, 5291, 6022, 6626, 8314, 9648]
 PAIRS = {
-    # "2-phenylethanethiol_OR2W1": 4707,
-    # "propionate_OR51E2": 4336,
+                                        
+                                
     "TP_Minus_Menthol": 19073,
     "TN_Plus_Menthol": 18633
 }

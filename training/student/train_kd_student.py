@@ -302,9 +302,6 @@ def train_student(fold, model, train_loader, val_loader, scenario_key, cfg, save
         'val_binary': final_preds_binary
     }
 
-# ------------------------------------------------------------------------------
-# MAIN PIPELINE
-# ------------------------------------------------------------------------------
 def main():
     for SEED in SEEDS:
         print(f"\n{'='*60}")
