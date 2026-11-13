@@ -4,9 +4,7 @@
 
 A heterogeneous knowledge distillation (KD) framework for computational deorphanization of odorant receptors (ORs). ScentOR bridges gradient boosting (GB)-based teacher models with neural network (NN)-based student models using bidirectional gated cross-attention, achieving robust odorant ligand–OR protein interaction prediction from 1D sequence-based embeddings without explicit 3D structural input.
 
-> **Paper**: *ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Odorant Receptor Deorphanization*
-> Eun Cheol Kim and YounJoon Jung — Department of Chemistry, Seoul National University
-> Under review
+> **Paper**: Kim, E. C.; Jung, Y. ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Odorant Receptor Deorphanization. *J. Chem. Inf. Model.* **2026**, in press.
 
 ## Overview
 
@@ -174,7 +172,7 @@ python 03_weight_assignment.py
 
 **Output**: `final_dataset_weighted.csv`
 
-Assigns confidence-based sample weights by Hladiš et al. and removes exact-duplicate conflicts (same odorant ligand–OR protein pair with contradictory labels).
+Assigns confidence-based sample weights by Hladiš *et al.* and removes exact-duplicate conflicts (same odorant ligand–OR protein pair with contradictory labels).
 
 ```bash
 python 04_ligand_3d_embedding.py
@@ -426,7 +424,7 @@ The 20 random seeds used throughout this work are listed below for exact reprodu
 
 This work is based on the **M2OR database**, available at [https://m2or.chemsensim.fr/](https://m2or.chemsensim.fr/):
 
-> Lalis, M. et al. M2OR: a database of olfactory receptor–odorant pairs for understanding the molecular mechanisms of olfaction. *Nucleic Acids Res.* **2024**, *52*(D1), D1370–D1379.
+> Lalis, M. *et al.* M2OR: a database of olfactory receptor–odorant pairs for understanding the molecular mechanisms of olfaction. *Nucleic Acids Res.* **2024**, *52*(D1), D1370–D1379.
 
 Because the M2OR website does not explicitly specify redistribution terms for its source records, **the raw M2OR export (`pairs.csv`) is not included in this repository.** To run the full pipeline from raw data, download the M2OR dataset directly from the M2OR website and place the export at `data/pairs.csv`. The curation scripts (`01_smiles_validation.py`–`03_weight_assignment.py`) reproduce the curated dataset from this export, applying the selection and filtering criteria described in the manuscript (39,723 pairs retained from 53,444 initial entries).
 
@@ -477,13 +475,13 @@ The XAI scripts (`analysis/15_case_screening.py`, `analysis/17_integrated_gradie
    The `--canonicalize` flag standardizes SMILES with RDKit to exactly match the representation produced by the curation pipeline (recommended).
 3. Point the XAI scripts' `RAW_DATA_CSV` at `data/final_dataset_weighted_with_strings.csv`.
 
-Out-of-distribution test structures (e.g., (R/S)-sotolon) are specified directly within `analysis/23_ood_enantiomer.py` and require no external data.
+Out-of-distribution test structures (*e.g.*, (R/S)-sotolon) are specified directly within `analysis/23_ood_enantiomer.py` and require no external data.
 
 ### Model Weights
 
 Trained teacher (`.model`) and student (`.pt`) weights for all 20 seeds × 10 folds are archived on Zenodo:
 
-> Kim, E. C., & Jung, Y. (2026). ScentOR: Trained Model Weights [Data set]. Zenodo. https://doi.org/10.5281/zenodo.20019062
+> Kim, E. C.; Jung, Y. ScentOR: Trained Model Weights; Zenodo, 2026. https://doi.org/10.5281/zenodo.20019062
 
 | File | Contents | Size (approx.) |
 |------|----------|----------------|
@@ -518,10 +516,11 @@ This repository does not redistribute the raw M2OR database. The preprocessing s
 If you use ScentOR in your research, please cite:
 
 ```bibtex
-@misc{kim2026scentor,
-  title={ScentOR: Semantic-Only Heterogeneous Knowledge Distillation for Odorant Receptor Deorphanization},
+@article{kim2026scentor,
+  title={{ScentOR}: Semantic-Only Heterogeneous Knowledge Distillation for Odorant Receptor Deorphanization},
   author={Kim, Eun Cheol and Jung, YounJoon},
+  journal={Journal of Chemical Information and Modeling},
   year={2026},
-  note={Under review}
+  note={In press}
 }
 ```
